@@ -1,22 +1,51 @@
 #ifndef _LIST_H_
 #define _LIST_H_
 
-#include <stdbool.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#define STR_SIZE 64
 
-typedef struct _node Node;
-typedef struct _list List;
+typedef struct _node{
+    int value;
+    struct _node *next;
+    struct _node *prev;
+}Node;
 
-List* createList();
-void destroyList(List **list);
-void pushFront(List *list, int *data);
-void* popFront(List *list);
-void pushBack(List *list, int *value);
-void* popBack(List *list);
-Node* getN(List *list, int index);
-void insert(List *list, int index, int *value);
-void* deleteN(List *list, int index);
-void printList(List *list);
-int topList(List *list);
-//void cyclicalSh(List *list);
+typedef struct _list{
+    size_t len;
+    Node *head;
+    Node *tail;
+}List;
+
+
+size_t list_size(List *l);
+
+Node *node_create();
+
+List *list_create();
+
+void list_destroy(List *l);
+
+void list_insert(int index, int str, List *l);
+
+void list_print(List *l);
+
+int list_get(int index, List *l);
+
+void list_append(int str, List *l);
+
+void list_delete(int index, List *l);
+
+void list_remove(int str, List *l);
+
+void list_assign(int index, int str, List *l);
+
+size_t list_size(List *l);
+
+void cycle(List *l);
+
 
 #endif
+
+

@@ -1,213 +1,176 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-
 #include "list.h"
 
-struct _node {
-    int *value;
-    struct _node *next;
-    struct _node *prev;
-};
 
-struct _list {
-    Node *head;
-    Node *tail;
-    size_t size;
-};
-
-List* createList() {
-    List *tmp = (List*) malloc(sizeof(List));
-    tmp->size = 0;
-    tmp->head = tmp->tail = NULL;
- 
-    return tmp;
-}
-
-void destroyList(List **list) {
-    Node *tmp = (*list)->head;
-    Node *next = NULL;
-    while (tmp) {
-        next = tmp->next;
-        free(tmp);
-        tmp = next;
-    }
-    free(*list);
-    (*list) = NULL;
+Node *node_create()
+{
+    Node *n = (Node*)malloc(sizeof(Node));
+    n->next = n;
+    n->prev = n;
+    n->value = 0;
+    return n;
 }
 
 
-void pushFront(List *list, int *data) {
-    Node *tmp = (Node*) malloc(sizeof(Node));
-    if (tmp == NULL) {
-        exit(1);
-    }
-    tmp->value = data;
-    tmp->next = list->head;
-    tmp->prev = NULL;
-    if (list->head) {
-        list->head->prev = tmp;
-    }
-    list->head = tmp;
- 
-    if (list->tail == NULL) {
-        list->tail = tmp;
-    }
-    list->size++;
+List *list_create()
+{
+    List *l = (List*)malloc(sizeof(List));
+    l->len = 0;
+    l->head = l->tail = node_create();
+    return l;
 }
 
-void* popFront(List *list) {
-    Node *prev;
-    void *tmp;
-    if (list->head == NULL) {
-        exit(2);
+void list_destroy(List *l)
+{
+    Node *n = l->head;
+    for (int i = 0; i <= l->len; ++i) {
+        Node *n1 = n->next;
+        free(n);
+        n = n1;
     }
- 
-    prev = list->head;
-    list->head = list->head->next;
-    if (list->head) {
-        list->head->prev = NULL;
-    }
-    if (prev == list->tail) {
-        list->tail = NULL;
-    }
-    tmp = prev->value;
-    free(prev);
- 
-    list->size--;
-    return tmp;
+    free(l);
 }
 
-
-void pushBack(List *list, int *value) {
-    Node *tmp = (Node*) malloc(sizeof(Node));
-    if (tmp == NULL) {
-        exit(3);
+void list_insert(int index, int str, List *l)
+{
+    Node *n = l->head;
+    Node *n1 = node_create();
+    n1->value = str;
+    if (index <= l->len / 2) {
+        for (int i = 0; i < index; i++) {
+            n = n->next;
+        }
+        n1->next = n->next;
+        n1->prev = n;
+        n->next->prev = n1;
+        n->next = n1;
+        l->len++;
+    } else if (index < l->len) {
+        for (int i = 0; i < l->len - index; i++) {
+            n = n->prev;
+        }
+        n1->next = n->next;
+        n1->prev = n;
+        n->next->prev = n1;
+        n->next = n1;
+        l->len++;
+    } else {
+        n1->prev = n->prev;
+        n1->next = n;
+        n->prev->next = n1;
+        n->prev = n1;
+        l->len++;
     }
-    tmp->value = value;
-    tmp->next = NULL;
-    tmp->prev = list->tail;
-    if (list->tail) {
-        list->tail->next = tmp;
-    }
-    list->tail = tmp;
- 
-    if (list->head == NULL) {
-        list->head = tmp;
-    }
-    list->size++;
-}
- 
-void* popBack(List *list) {
-    Node *next;
-    void *tmp;
-    if (list->tail == NULL) {
-        exit(4);
-    }
- 
-    next = list->tail;
-    list->tail = list->tail->prev;
-    if (list->tail) {
-        list->tail->next = NULL;
-    }
-    if (next == list->head) {
-        list->head = NULL;
-    }
-    tmp = next->value;
-    free(next);
- 
-    list->size--;
-    return tmp;
 }
 
-
-Node* getN(List *list, int index) {
-    Node *tmp = list->head;
-    int i = 0;
- 
-    while (tmp && i < index) {
-        tmp = tmp->next;
-        i++;
+void list_print(List *l)
+{
+    Node *n = l->head;
+    for (int i = 0; i < l->len; ++i)
+    {
+        printf("%d ", n->next->value);
+        n = n->next;
     }
- 
-    return tmp;
+    printf("\n");
+}
+
+size_t list_size(List *l)
+{
+    return l->len;
+}
+
+void list_remove(int str, List *l)
+{
+    Node *n = l->head;
+    for (int i = 0; i < l->len; ++i)
+    {
+        if(n->next->value == str) {
+            Node *n1 = n->next;
+            n->next = n->next->next;
+            n->next->prev = n;
+            free(n1);
+            l->len--;
+            return;
+        }
+        n = n->next;
+    }
 }
 
 
-void insert(List *list, int index, int *value) {
-    Node *elm = NULL;
-    Node *ins = NULL;
-    elm = getN(list, index);
-    if (elm == NULL) {
-        exit(5);
+void list_delete(int index, List *l)
+{
+    Node *n = l->head;
+    if (index > l->len - 1) {
+        return;
     }
-    ins = (Node*) malloc(sizeof(Node));
-    ins->value = value;
-    ins->prev = elm;
-    ins->next = elm->next;
-    if (elm->next) {
-        elm->next->prev = ins;
+    if (index <= l->len / 2) {
+        for (int i = 0; i < index; i++) {
+            n = n->next;
+        }
+        Node *n1 = n->next;
+        n->next->next->prev = n;
+        n->next = n->next->next;
+        l->len--;
+        free(n1);
+    } else if (index < l->len) {
+        for (int i = 0; i < l->len - index; i++) {
+            n = n->prev;
+        }
+        Node *n1 = n->next;
+        n->next->next->prev = n;
+        n->next = n->next->next;
+        l->len--;
+        free(n1);
     }
-    elm->next = ins;
- 
-    if (!elm->prev) {
-        list->head = elm;
-    }
-    if (!elm->next) {
-        list->tail = elm;
-    }
- 
-    list->size++;
-}
- 
-void* deleteN(List *list, int index) {
-    Node *elm = NULL;
-    void *tmp = NULL;
-    elm = getN(list, index);
-    if (elm == NULL) {
-        exit(5);
-    }
-    if (elm->prev) {
-        elm->prev->next = elm->next;
-    }
-    if (elm->next) {
-        elm->next->prev = elm->prev;
-    }
-    tmp = elm->value;
- 
-    if (!elm->prev) {
-        list->head = elm->next;
-    }
-    if (!elm->next) {
-        list->tail = elm->prev;
-    }
- 
-    free(elm);
- 
-    list->size--;
- 
-    return tmp;
 }
 
-int topList(List *list) {
-    int x = list->value;
-    return x;
+void list_append(int str, List *l)
+{
+    Node *n = l->head;
+    Node *n1 = node_create();
+    n1->value = str;
+    n1->prev = n->prev;
+    n1->next = n;
+    n->prev->next = n1;
+    n->prev = n1;
+    l->len++;
 }
 
-void printList(List *list) {
-    List *helper_list = createList();
-    while(list) {
-        printf("%d\n", topList(list));
-        pushFront(helper_list, popFront);
+int list_get(int index, List *l)
+{
+    Node *n = l->head;
+    if (index > (l->len - 1)) {
+        return 0;
     }
-    while(!stack_is_empty(helper_list)) {
-        pushFront(list, popFront(helper_list));
+    for (int i = 0; i < index; ++i) {
+        n = n->next;
     }
-    stack_destroy(&helper_list);
+    return n->next->value;
 }
 
+void list_assign(int index, int str, List *l)
+{
+    Node *n = l->head;
+    if (index > (l->len - 1)) {
+        printf("Неверный индекс");
+        printf("\n");
+        return;
+    }
+    for (int i = 0; i < index; ++i) {
+        n = n->next;
+    }
+    n->next->value = str;
+}
 
-//void cyclicalSh(List *list) {
-  //  if (list == NULL || list->size == 1) return;
-//}
+void cycle(List *l)
+{
+    if (l->len == 0 || l->len == 1) {
+        return;
+    }
+    Node *n = l->head->next;
+    int a = n->value;
+    for (int i = 0; i < l->len - 1; i++) {
+        n->value = n->next->value;
+        n = n->next;
+    }
+    n->value = a;
+}
